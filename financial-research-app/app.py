@@ -106,12 +106,41 @@ def add_company():
         code = data.get('code')
         sector = data.get('sector', 'computers-software')
         full_name = data.get('full_name')
-        
-        if not all([name, slug, code]):
+        # Allow name-only additions: generate slug/code when missing
+        if not name:
             return jsonify({
                 'success': False,
-                'error': 'Missing required fields: name, slug, code'
+                'error': 'Missing required field: name'
             }), 400
+
+        # Generate slug if not provided
+        import re
+        if not slug:
+            slug = re.sub(r'[^a-z0-9-]', '', name.lower().strip().replace(' ', '-'))
+            if not slug:
+                slug = name.lower().strip().replace(' ', '-')
+
+        # Generate a short code if not provided
+        if not code:
+            # Attempt to build code from uppercase initials or first letters
+            words = [w for w in re.split(r'[^A-Za-z0-9]+', name) if w]
+            if len(words) == 0:
+                base = re.sub(r'[^A-Za-z0-9]', '', name)[:4].upper()
+            elif len(words) == 1:
+                base = re.sub(r'[^A-Za-z0-9]', '', words[0])[:4].upper()
+            else:
+                # use first letters of first up to 4 words
+                initials = ''.join(w[0] for w in words)[:4]
+                base = re.sub(r'[^A-Za-z0-9]', '', initials).upper()
+
+            # Ensure uniqueness by appending numeric suffix if needed
+            existing_codes = {cfg.get('code') for cfg in company_config.companies.values()}
+            code_candidate = base
+            suffix = 1
+            while code_candidate in existing_codes:
+                code_candidate = f"{base}{suffix}"
+                suffix += 1
+            code = code_candidate
         
         success = company_config.add_company(name, slug, code, sector, full_name)
         
@@ -122,10 +151,14 @@ def add_company():
                 'companies': company_config.get_all_companies()
             })
         else:
+            # Company already existed - treat as idempotent success so the
+            # frontend can decide how to include it in the current session.
             return jsonify({
-                'success': False,
-                'error': f'Company {name} already exists'
-            }), 400
+                'success': True,
+                'already_exists': True,
+                'message': f'Company {name} already exists',
+                'companies': company_config.get_all_companies()
+            })
             
     except Exception as e:
         logger.error(f"Add company failed: {e}")
@@ -383,40 +416,48 @@ def upload_excel():
                 'error': 'No file selected'
             }), 400
         
-        # Secure the filename
+        # Secure the filename (for metadata only)
         filename = secure_filename(file.filename)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        unique_filename = f"{timestamp}_{filename}"
-        
-        # Save file
-        filepath = UPLOAD_FOLDER / unique_filename
-        file.save(str(filepath))
-        
-        logger.info(f"File uploaded: {filepath}")
-        
+
+        # Save to a temporary file instead of persisting in uploads folder
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix='_' + filename)
+        tmp_path = Path(tmp.name)
+        tmp.close()
+
+        # Save incoming file to temp path
+        file.save(str(tmp_path))
+        logger.info(f"Temp file created: {tmp_path}")
+
         # Validate file
-        is_valid, error_msg = excel_upload_handler.validate_file(filepath)
+        is_valid, error_msg = excel_upload_handler.validate_file(tmp_path)
         if not is_valid:
-            filepath.unlink()  # Delete invalid file
+            try:
+                tmp_path.unlink()
+            except Exception:
+                pass
             return jsonify({
                 'success': False,
                 'error': error_msg
             }), 400
-        
-        # Extract companies
-        companies = excel_upload_handler.extract_companies(filepath)
-        
-        # Get file info
-        file_info = excel_upload_handler.get_file_info(filepath)
-        
+
+        # Extract companies and file info
+        companies = excel_upload_handler.extract_companies(tmp_path)
+        file_info = excel_upload_handler.get_file_info(tmp_path)
+
+        # Remove temporary file immediately to avoid storing uploads
+        try:
+            tmp_path.unlink()
+            logger.info(f"Temp file deleted: {tmp_path}")
+        except Exception:
+            logger.warning(f"Could not delete temp file: {tmp_path}")
+
         return jsonify({
             'success': True,
-            'filename': unique_filename,
-            'filepath': str(filepath),
+            'original_filename': filename,
             'companies': companies,
             'company_count': len(companies),
             'file_info': file_info,
-            'message': f'Successfully uploaded {filename} with {len(companies)} companies'
+            'message': f'Successfully processed {filename} with {len(companies)} companies'
         })
         
     except Exception as e:

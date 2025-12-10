@@ -21,6 +21,7 @@
             flex-direction: column;
         }
 
+        
         /* Header */
         .wizard-header {
             background: var(--card-bg);
@@ -775,6 +776,14 @@
                             <!-- Companies will be populated here -->
                         </div>
 
+                        <!-- Add Company UI (name only) -->
+                        <div style="margin-top: 12px; display:flex; gap:8px; align-items:center;">
+                            <input id="newCompanyName" placeholder="Add company name (e.g. MyCo)" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-secondary);">
+                            <button class="btn btn-outline" onclick="addCompanyFromUI()">➕ Add</button>
+                        </div>
+
+                        <!-- Temporary included custom companies for this session -->
+                        <div id="customIncludedContainer" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>
                         <div class="grid grid-3 gap-4 mt-6">
                             <div>
                                 <label
@@ -1093,14 +1102,20 @@
             const grid = document.getElementById('companyGrid');
             document.getElementById('companiesFoundText').textContent = `${companies.length} companies found`;
 
-            grid.innerHTML = companies.map((company, index) => `
-                <div class="company-item selected" data-company="${company}" onclick="toggleCompany(this)">
-                    <div class="company-checkbox">✓</div>
-                    <span class="company-name">${company}</span>
-                </div>
-            `).join('');
+            // If no prior selection state exists, default to selecting all companies
+            if (!Array.isArray(state.selectedCompanies)) {
+                state.selectedCompanies = [...companies];
+            }
 
-            state.selectedCompanies = [...companies];
+            grid.innerHTML = companies.map((company, index) => {
+                const isSelected = state.selectedCompanies.includes(company);
+                return `
+                    <div class="company-item ${isSelected ? 'selected' : ''}" data-company="${company}" onclick="toggleCompany(this)">
+                        <div class="company-checkbox">✓</div>
+                        <span class="company-name">${company}</span>
+                    </div>
+                `;
+            }).join('');
         }
 
         function toggleCompany(element) {
@@ -1128,6 +1143,87 @@
                 el.classList.remove('selected');
             });
             state.selectedCompanies = [];
+        }
+
+        // Add company from UI inputs
+        async function addCompanyFromUI() {
+            const name = document.getElementById('newCompanyName').value.trim();
+
+            if (!name) {
+                addBotMessage('⚠️ Please enter a company name.');
+                return;
+            }
+
+            try {
+                const payload = { name };
+                const resp = await fetch('/api/companies/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await resp.json();
+                if (!resp.ok || !result.success) {
+                    throw new Error(result.error || 'Failed to add company');
+                }
+
+                // Do NOT modify the detected/uploaded companies list shown in the grid
+                // (avoid showing companies that are not in the uploaded Excel).
+                // We still persist the custom company on the backend, but keep
+                // the UI grid reflecting only the current upload's detection.
+
+                // clear input
+                document.getElementById('newCompanyName').value = '';
+
+                addBotMessage(`✅ Company "${name}" added (saved as a custom company).`);
+
+                // Include this company in the current research session selection
+                state.selectedCompanies = state.selectedCompanies || [];
+                if (!state.selectedCompanies.includes(name)) {
+                    state.selectedCompanies.push(name);
+                }
+
+                // Render a small chip in the customIncludedContainer so user sees it's included
+                renderCustomIncluded();
+            } catch (err) {
+                addBotMessage(`❌ Could not add company: ${err.message}`);
+            }
+        }
+
+        // Render small chips for custom companies included in this session
+        function renderCustomIncluded() {
+            const container = document.getElementById('customIncludedContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            const items = state.selectedCompanies || [];
+
+            // Only show items that are not part of detected upload companies
+            const detected = state.companies || [];
+            const customOnly = items.filter(i => !detected.includes(i));
+
+            customOnly.forEach(name => {
+                const chip = document.createElement('div');
+                chip.className = 'company-item selected';
+                chip.style.padding = '6px 10px';
+                chip.style.borderRadius = '12px';
+                chip.style.background = 'var(--bg-secondary)';
+                chip.style.display = 'inline-flex';
+                chip.style.alignItems = 'center';
+                chip.style.gap = '8px';
+                chip.textContent = name;
+
+                const remove = document.createElement('button');
+                remove.textContent = '✕';
+                remove.style.marginLeft = '8px';
+                remove.className = 'btn btn-ghost btn-sm';
+                remove.onclick = () => {
+                    state.selectedCompanies = state.selectedCompanies.filter(c => c !== name);
+                    renderCustomIncluded();
+                };
+
+                chip.appendChild(remove);
+                container.appendChild(chip);
+            });
         }
 
         // ========== Research ==========
