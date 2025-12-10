@@ -9,5 +9,27 @@ services:
         sync: false
       - key: PERPLEXITY_MODEL
         value: sonar
+      - key: PERPLEXITY_USE_FINANCE_DOMAIN
+        value: "true"
+      - key: RATE_LIMIT_RPM
+        value: "20"
+      - key: RATE_LIMIT_TPM
+        value: "10000"
+      - key: CACHE_ENABLED
+        value: "true"
+      - key: CACHE_TTL_SECONDS
+        value: "86400"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: MAX_RESEARCH_WORKERS
+        value: "3"
+      - key: RESEARCH_QUARTERS
+        value: Q1,Q2,Q3,Q4
+      - key: RESEARCH_YEAR
+        value: "2024"
+      - key: MIN_CONFIDENCE_THRESHOLD
+        value: "0.7"
+      - key: AUTO_RETRY_FAILED
+        value: "true"
       - key: PYTHON_VERSION
         value: 3.11.0
