@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).parent.parent
 # API Configuration
 PERPLEXITY_API_KEY = os.getenv('PERPLEXITY_API_KEY', '')
 PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions'
-PERPLEXITY_MODEL = os.getenv('PERPLEXITY_MODEL', 'llama-3.1-sonar-large-128k-online')
+PERPLEXITY_MODEL = os.getenv('PERPLEXITY_MODEL', 'sonar')
 
 # Rate Limiting
 RATE_LIMIT_REQUESTS_PER_MINUTE = int(os.getenv('RATE_LIMIT_RPM', '20'))

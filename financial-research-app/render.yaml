@@ -7,5 +7,7 @@ services:
     envVars:
       - key: PERPLEXITY_API_KEY
         sync: false
+      - key: PERPLEXITY_MODEL
+        value: sonar
       - key: PYTHON_VERSION
         value: 3.11.0
