@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Research AI - Smart Research Wizard</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Base Styles -->
+    <link rel="stylesheet" href="/static/main.css">
+
+    <style>
+        /* ========== Wizard Layout ========== */
+        .wizard-layout {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .wizard-header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: var(--space-4) var(--space-6);
+            position: sticky;
+            top: 0;
+            z-index: var(--z-sticky);
+        }
+
+        .wizard-header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        /* Progress Steps */
+        .progress-steps {
+            display: flex;
+            gap: var(--space-1);
+            align-items: center;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            transition: all var(--transition-base);
+        }
+
+        .step-item.active .step-number {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .step-item.completed .step-number {
+            background: var(--success-500);
+            color: white;
+        }
+
+        .step-item.completed .step-number::after {
+            content: '✓';
+        }
+
+        .step-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        .step-item.active .step-label {
+            color: var(--primary-500);
+            display: block;
+        }
+
+        .step-connector {
+            width: 40px;
+            height: 3px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-full);
+            margin: 0 var(--space-2);
+        }
+
+        .step-connector.completed {
+            background: var(--success-500);
+        }
+
+        /* Main Content Area */
+        .wizard-main {
+            flex: 1;
+            display: flex;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: var(--space-6);
+            gap: var(--space-6);
+        }
+
+        .wizard-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* Step Panels */
+        .step-panel {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .step-panel.active {
+            display: block;
+        }
+
+        /* Chat Sidebar */
+        .chat-sidebar {
+            width: 380px;
+            flex-shrink: 0;
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 180px);
+            position: sticky;
+            top: 100px;
+        }
+
+        .chat-header {
+            padding: var(--space-4) var(--space-6);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--gradient-primary);
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            color: white;
+        }
+
+        .chat-header h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-4);
+        }
+
+        .chat-message {
+            margin-bottom: var(--space-4);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .chat-message.bot {
+            padding: var(--space-4);
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-lg);
+            border-top-left-radius: 0;
+        }
+
+        .chat-message.user {
+            padding: var(--space-4);
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: var(--radius-lg);
+            border-top-right-radius: 0;
+            margin-left: var(--space-8);
+        }
+
+        .chat-input-area {
+            padding: var(--space-4);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: var(--space-3) var(--space-4);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            font-size: 0.9375rem;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            transition: border-color var(--transition-fast);
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-500);
+        }
+
+        .chat-send-btn {
+            padding: var(--space-3) var(--space-4);
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            font-size: 1.25rem;
+            transition: transform var(--transition-fast);
+        }
+
+        .chat-send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Step Content Cards */
+        .step-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-10);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .step-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: var(--space-2);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .step-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: var(--space-8);
+        }
+
+        /* Upload Zone Enhanced */
+        .upload-zone-large {
+            border: 3px dashed var(--border-color);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-16);
+            text-align: center;
+            transition: all var(--transition-base);
+            cursor: pointer;
+            background: var(--bg-secondary);
+        }
+
+        .upload-zone-large:hover {
+            border-color: var(--primary-500);
+            background: var(--card-bg);
+            transform: scale(1.01);
+        }
+
+        .upload-zone-large.drag-over {
+            border-color: var(--primary-500);
+            background: rgba(102, 126, 234, 0.05);
+            transform: scale(1.02);
+        }
+
+        .upload-icon-large {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto var(--space-6);
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--space-2);
+        }
+
+        .upload-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: var(--space-4);
+        }
+
+        .upload-formats {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-4);
+            margin-top: var(--space-6);
+        }
+
+        .format-badge {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-full);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Company List */
+        .company-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: var(--space-4);
+            margin: var(--space-6) 0;
+        }
+
+        .company-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .company-item:hover {
+            border-color: var(--primary-500);
+            background: var(--card-bg);
+        }
+
+        .company-item.selected {
+            border-color: var(--primary-500);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .company-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .company-item.selected .company-checkbox {
+            background: var(--primary-500);
+            border-color: var(--primary-500);
+            color: white;
+        }
+
+        .company-name {
+            font-weight: 600;
+        }
+
+        /* Research Progress */
+        .research-grid {
+            display: grid;
+            gap: var(--space-4);
+            margin: var(--space-6) 0;
+        }
+
+        .research-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-4) var(--space-6);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            border-left: 4px solid var(--gray-400);
+            transition: all var(--transition-base);
+        }
+
+        .research-item.pending {
+            border-left-color: var(--gray-400);
+        }
+
+        .research-item.processing {
+            border-left-color: var(--info-500);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .research-item.complete {
+            border-left-color: var(--success-500);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .research-item.error {
+            border-left-color: var(--error-500);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .research-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            background: var(--bg-tertiary);
+        }
+
+        .research-item.processing .research-icon {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .research-info {
+            flex: 1;
+        }
+
+        .research-company {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+        }
+
+        .research-status {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Data Preview Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: var(--space-6) 0;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: var(--space-4);
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .confidence-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .confidence-high {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-500);
+        }
+
+        .confidence-medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-500);
+        }
+
+        .confidence-low {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-500);
+        }
+
+        /* Success Animation */
+        .success-container {
+            text-align: center;
+            padding: var(--space-16) 0;
+        }
+
+        .success-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto var(--space-8);
+            background: var(--gradient-success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+            animation: successPop 0.5s ease-out;
+            box-shadow: 0 20px 60px rgba(16, 185, 129, 0.3);
+        }
+
+        @keyframes successPop {
+            0% {
+                transform: scale(0);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .success-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: var(--space-4);
+        }
+
+        .success-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: var(--space-8);
+        }
+
+        /* Navigation Footer */
+        .wizard-footer {
+            padding: var(--space-6);
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .wizard-footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Response Modal */
+        .response-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: var(--z-modal);
+            justify-content: center;
+            align-items: center;
+            padding: var(--space-6);
+        }
+
+        .response-modal.active {
+            display: flex;
+        }
+
+        .response-modal-content {
+            background: var(--card-bg);
+            border-radius: var(--radius-2xl);
+            max-width: 800px;
+            width: 100%;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: var(--shadow-2xl);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .response-modal-header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: var(--space-6);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .response-modal-header h3 {
+            margin: 0;
+        }
+
+        .response-modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.25rem;
+        }
+
+        .response-modal-body {
+            padding: var(--space-6);
+            max-height: calc(85vh - 100px);
+            overflow-y: auto;
+        }
+
+        .response-raw {
+            background: var(--bg-secondary);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            font-size: 0.875rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .chat-sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .progress-steps {
+                gap: 0;
+            }
+
+            .step-label {
+                display: none !important;
+            }
+
+            .step-connector {
+                width: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Wizard Layout -->
+    <div class="wizard-layout">
+        <!-- Header with Progress -->
+        <header class="wizard-header">
+            <div class="wizard-header-content">
+                <div class="logo">
+                    <div class="logo-icon">📊</div>
+                    <span>Financial Research AI</span>
+                </div>
+
+                <div class="progress-steps">
+                    <div class="step-item active" data-step="1">
+                        <div class="step-number">1</div>
+                        <span class="step-label">Upload</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step-item" data-step="2">
+                        <div class="step-number">2</div>
+                        <span class="step-label">Analyze</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step-item" data-step="3">
+                        <div class="step-number">3</div>
+                        <span class="step-label">Research</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step-item" data-step="4">
+                        <div class="step-number">4</div>
+                        <span class="step-label">Preview</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step-item" data-step="5">
+                        <div class="step-number">5</div>
+                        <span class="step-label">Download</span>
+                    </div>
+                </div>
+
+                <a href="/debug" class="btn btn-ghost" style="color: var(--text-secondary);">
+                    🛠️ Debug Tools
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="wizard-main">
+            <div class="wizard-content">
+                <!-- Step 1: Upload -->
+                <div class="step-panel active" id="step1">
+                    <div class="step-card">
+                        <h1 class="step-title">📤 Upload Your Excel Template</h1>
+                        <p class="step-subtitle">
+                            Upload your Excel file containing company names. We'll extract them and fetch quarterly
+                            financial data automatically.
+                        </p>
+
+                        <div class="upload-zone-large" id="uploadZone">
+                            <div class="upload-icon-large">📁</div>
+                            <h2 class="upload-title">Drop your Excel file here</h2>
+                            <p class="upload-subtitle">or click to browse your files</p>
+                            <div class="upload-formats">
+                                <span class="format-badge">📄 .xlsx</span>
+                                <span class="format-badge">📄 .xls</span>
+                                <span class="format-badge">📦 Max 10MB</span>
+                            </div>
+                        </div>
+
+                        <div id="uploadProgress" class="hidden" style="margin-top: var(--space-6);">
+                            <div class="flex justify-between mb-4">
+                                <span id="uploadFileName" style="font-weight: 600;">Uploading...</span>
+                                <span id="uploadPercent">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="uploadProgressBar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Analyze Structure -->
+                <div class="step-panel" id="step2">
+                    <div class="step-card">
+                        <h1 class="step-title">🔍 Detected Companies</h1>
+                        <p class="step-subtitle">
+                            We found the following companies in your Excel file. Select the ones you want to research.
+                        </p>
+
+                        <div class="flex justify-between items-center mb-4">
+                            <span id="companiesFoundText" style="color: var(--text-secondary);">0 companies found</span>
+                            <div class="flex gap-4">
+                                <button class="btn btn-ghost btn-sm" onclick="selectAllCompanies()">Select All</button>
+                                <button class="btn btn-ghost btn-sm" onclick="deselectAllCompanies()">Deselect
+                                    All</button>
+                            </div>
+                        </div>
+
+                        <div class="company-grid" id="companyGrid">
+                            <!-- Companies will be populated here -->
+                        </div>
+
+                        <div class="grid grid-3 gap-4 mt-6">
+                            <div>
+                                <label
+                                    style="display: block; margin-bottom: var(--space-2); font-weight: 600;">Quarters</label>
+                                <select id="quartersSelect" multiple
+                                    style="width: 100%; padding: var(--space-3); border-radius: var(--radius-lg); border: 2px solid var(--border-color); background: var(--bg-secondary);">
+                                    <option value="Q1" selected>Q1</option>
+                                    <option value="Q2" selected>Q2</option>
+                                    <option value="Q3" selected>Q3</option>
+                                    <option value="Q4" selected>Q4</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    style="display: block; margin-bottom: var(--space-2); font-weight: 600;">Year</label>
+                                <input type="number" id="yearInput" value="2025" min="2020" max="2026"
+                                    style="width: 100%; padding: var(--space-3); border-radius: var(--radius-lg); border: 2px solid var(--border-color); background: var(--bg-secondary);">
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <button class="btn btn-primary" style="width: 100%;" onclick="startResearch()">
+                                    ⚡ Start Research
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Research Progress -->
+                <div class="step-panel" id="step3">
+                    <div class="step-card">
+                        <h1 class="step-title">🚀 Research in Progress</h1>
+                        <p class="step-subtitle">
+                            Fetching quarterly financial data from Moneycontrol via Perplexity AI...
+                        </p>
+
+                        <div class="flex justify-between items-center mb-4">
+                            <span id="researchProgressText">Processing 0 of 0 companies...</span>
+                            <span id="researchTimeEstimate" style="color: var(--text-secondary);">Estimating
+                                time...</span>
+                        </div>
+
+                        <div class="progress-bar mb-6">
+                            <div class="progress-fill" id="researchProgressBar" style="width: 0%;"></div>
+                        </div>
+
+                        <div class="research-grid" id="researchGrid">
+                            <!-- Research items will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Preview Data -->
+                <div class="step-panel" id="step4">
+                    <div class="step-card">
+                        <h1 class="step-title">📊 Data Preview</h1>
+                        <p class="step-subtitle">
+                            Review the extracted financial data before downloading.
+                        </p>
+
+                        <div id="previewContent">
+                            <!-- Populated dynamically by displayCompanyData() -->
+                            <div class="empty-state">
+                                <p>Select a company to view data.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Download -->
+                <div class="step-panel" id="step5">
+                    <div class="step-card">
+                        <div class="success-container">
+                            <div class="success-icon">✅</div>
+                            <h1 class="success-title">Research Complete!</h1>
+                            <p class="success-subtitle">
+                                Your financial research has been completed successfully.<br>
+                                Download your auto-filled Excel file below.
+                            </p>
+
+                            <div class="flex justify-center gap-4">
+                                <button class="btn btn-primary btn-lg" onclick="downloadExcel()">
+                                    📥 Download Excel
+                                </button>
+                                <button class="btn btn-secondary btn-lg" onclick="startNewResearch()">
+                                    🔄 Start New Research
+                                </button>
+                            </div>
+
+                            <div id="downloadSummary"
+                                style="margin-top: var(--space-8); text-align: left; max-width: 500px; margin-left: auto; margin-right: auto;">
+                                <h3 style="margin-bottom: var(--space-4);">📋 Summary</h3>
+                                <div
+                                    style="background: var(--bg-secondary); padding: var(--space-4); border-radius: var(--radius-lg);">
+                                    <p><strong>Companies Researched:</strong> <span id="summaryCompanies">0</span></p>
+                                    <p><strong>Data Points Extracted:</strong> <span id="summaryDataPoints">0</span></p>
+                                    <p><strong>Average Confidence:</strong> <span id="summaryConfidence">0%</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Sidebar -->
+            <aside class="chat-sidebar">
+                <div class="chat-header">
+                    <h3>💬 Ask About Your Data</h3>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message bot">
+                        <strong>👋 Hi!</strong><br><br>
+                        I'm your financial research assistant. Upload an Excel file to get started, and I'll help you
+                        analyze the data.<br><br>
+                        <strong>You can ask me things like:</strong><br>
+                        • "What's TCS revenue for Q1 2024?"<br>
+                        • "Compare Infosys and Wipro EBITDA"<br>
+                        • "Which company has highest profit margin?"
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="chat-input-wrapper">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Ask about your data..."
+                            onkeypress="if(event.key==='Enter') sendChatMessage()">
+                        <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Footer Navigation -->
+        <footer class="wizard-footer">
+            <div class="wizard-footer-content">
+                <button class="btn btn-secondary" id="prevBtn" onclick="previousStep()" disabled>
+                    ← Back
+                </button>
+                <span id="stepIndicator" style="color: var(--text-secondary);">Step 1 of 5</span>
+                <button class="btn btn-primary" id="nextBtn" onclick="nextStep()" disabled>
+                    Next →
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Response Modal -->
+    <div class="response-modal" id="responseModal">
+        <div class="response-modal-content">
+            <div class="response-modal-header">
+                <h3>🔍 API Response</h3>
+                <button class="response-modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="response-modal-body" id="responseModalBody">
+                <!-- Content injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+
+    <script>
+        // ========== State Management ==========
+        const state = {
+            currentStep: 1,
+            maxStep: 5,
+            uploadedFile: null,
+            companies: [],
+            selectedCompanies: [],
+            researchResults: [],
+            quarters: ['Q1', 'Q2', 'Q3', 'Q4'],
+            year: 2025
+        };
+
+        // ========== Initialization ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            initUploadZone();
+            loadExistingResults();
+        });
+
+        // ========== Step Navigation ==========
+        function goToStep(step) {
+            if (step < 1 || step > state.maxStep) return;
+
+            // Update state
+            state.currentStep = step;
+
+            // Update panels
+            document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+
+            // Update progress steps
+            document.querySelectorAll('.step-item').forEach((item, index) => {
+                item.classList.remove('active', 'completed');
+                if (index + 1 < step) {
+                    item.classList.add('completed');
+                } else if (index + 1 === step) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Update connectors
+            document.querySelectorAll('.step-connector').forEach((conn, index) => {
+                conn.classList.toggle('completed', index + 1 < step);
+            });
+
+            // Update footer
+            document.getElementById('stepIndicator').textContent = `Step ${step} of ${state.maxStep}`;
+            document.getElementById('prevBtn').disabled = step === 1;
+            document.getElementById('nextBtn').disabled = step === state.maxStep;
+
+            // Add chat message about step change
+            if (step === 2 && state.companies.length > 0) {
+                addBotMessage(`Found ${state.companies.length} companies in your Excel file! Select the ones you want to research.`);
+            } else if (step === 3) {
+                addBotMessage(`Starting research for ${state.selectedCompanies.length} companies. This may take a few minutes...`);
+            } else if (step === 4) {
+                addBotMessage(`Research complete! Review the extracted data and let me know if you have any questions.`);
+            } else if (step === 5) {
+                addBotMessage(`🎉 Great job! Your research is ready to download. Ask me anything about the data before you go!`);
+            }
+        }
+
+        function nextStep() {
+            goToStep(state.currentStep + 1);
+        }
+
+        function previousStep() {
+            goToStep(state.currentStep - 1);
+        }
+
+        // ========== File Upload ==========
+        function initUploadZone() {
+            const zone = document.getElementById('uploadZone');
+            const input = document.getElementById('fileInput');
+
+            zone.addEventListener('click', () => input.click());
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('drag-over');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drag-over');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) handleFileUpload(file);
+            });
+
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) handleFileUpload(file);
+            });
+        }
+
+        async function handleFileUpload(file) {
+            // Validate file type
+            if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                addBotMessage(`⚠️ Invalid file type. Please upload an Excel file (.xlsx or .xls)`);
+                return;
+            }
+
+            // Show progress
+            document.getElementById('uploadProgress').classList.remove('hidden');
+            document.getElementById('uploadFileName').textContent = file.name;
+            document.getElementById('uploadProgressBar').style.width = '30%';
+            document.getElementById('uploadPercent').textContent = '30%';
+
+            addBotMessage(`📤 Uploading "${file.name}"...`);
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                document.getElementById('uploadProgressBar').style.width = '60%';
+                document.getElementById('uploadPercent').textContent = '60%';
+
+                const response = await fetch('/api/excel/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                document.getElementById('uploadProgressBar').style.width = '100%';
+                document.getElementById('uploadPercent').textContent = '100%';
+
+                if (result.success) {
+                    state.uploadedFile = result;
+                    state.companies = result.companies || [];
+
+                    addBotMessage(`✅ Successfully uploaded! Found ${state.companies.length} companies.`);
+
+                    // Populate company grid
+                    populateCompanyGrid(state.companies);
+
+                    // Auto-advance to step 2 after a brief delay
+                    setTimeout(() => {
+                        goToStep(2);
+                        document.getElementById('nextBtn').disabled = false;
+                    }, 1000);
+                } else {
+                    throw new Error(result.error || 'Upload failed');
+                }
+            } catch (error) {
+                addBotMessage(`❌ Upload failed: ${error.message}`);
+                document.getElementById('uploadProgress').classList.add('hidden');
+            }
+        }
+
+        // ========== Company Selection ==========
+        function populateCompanyGrid(companies) {
+            const grid = document.getElementById('companyGrid');
+            document.getElementById('companiesFoundText').textContent = `${companies.length} companies found`;
+
+            grid.innerHTML = companies.map((company, index) => `
+                <div class="company-item selected" data-company="${company}" onclick="toggleCompany(this)">
+                    <div class="company-checkbox">✓</div>
+                    <span class="company-name">${company}</span>
+                </div>
+            `).join('');
+
+            state.selectedCompanies = [...companies];
+        }
+
+        function toggleCompany(element) {
+            const company = element.dataset.company;
+            element.classList.toggle('selected');
+
+            if (element.classList.contains('selected')) {
+                if (!state.selectedCompanies.includes(company)) {
+                    state.selectedCompanies.push(company);
+                }
+            } else {
+                state.selectedCompanies = state.selectedCompanies.filter(c => c !== company);
+            }
+        }
+
+        function selectAllCompanies() {
+            document.querySelectorAll('.company-item').forEach(el => {
+                el.classList.add('selected');
+            });
+            state.selectedCompanies = [...state.companies];
+        }
+
+        function deselectAllCompanies() {
+            document.querySelectorAll('.company-item').forEach(el => {
+                el.classList.remove('selected');
+            });
+            state.selectedCompanies = [];
+        }
+
+        // ========== Research ==========
+        async function startResearch() {
+            if (state.selectedCompanies.length === 0) {
+                addBotMessage(`⚠️ Please select at least one company to research.`);
+                return;
+            }
+
+            state.quarters = Array.from(document.getElementById('quartersSelect').selectedOptions).map(o => o.value);
+            state.year = parseInt(document.getElementById('yearInput').value);
+
+            goToStep(3);
+            initResearchGrid();
+
+            // Research each company
+            let completed = 0;
+            const total = state.selectedCompanies.length * state.quarters.length;
+
+            for (const company of state.selectedCompanies) {
+                for (const quarter of state.quarters) {
+                    await researchCompany(company, quarter, state.year);
+                    completed++;
+                    updateResearchProgress(completed, total);
+                }
+            }
+
+            // Research complete - move to preview
+            addBotMessage(`✅ Research complete! Processed ${state.selectedCompanies.length} companies.`);
+            setTimeout(() => goToStep(4), 1500);
+            loadPreviewData();
+        }
+
+        function initResearchGrid() {
+            const grid = document.getElementById('researchGrid');
+            grid.innerHTML = state.selectedCompanies.map(company => `
+                <div class="research-item pending" id="research-${company.replace(/\s/g, '-')}">
+                    <div class="research-icon">⏳</div>
+                    <div class="research-info">
+                        <div class="research-company">${company}</div>
+                        <div class="research-status">Pending...</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function researchCompany(company, quarter, year) {
+            const id = `research-${company.replace(/\s/g, '-')}`;
+            const element = document.getElementById(id);
+
+            if (element) {
+                element.classList.remove('pending');
+                element.classList.add('processing');
+                element.querySelector('.research-icon').textContent = '🔄';
+                element.querySelector('.research-status').textContent = `Researching ${quarter} ${year}...`;
+            }
+
+            try {
+                const response = await fetch(`/api/research/${company}/${quarter}/${year}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                // Show popup with response
+                showResponseModal(company, quarter, year, data);
+
+                // Store result
+                state.researchResults.push({
+                    company,
+                    quarter,
+                    year,
+                    data: data.data || {},
+                    success: data.success
+                });
+
+                if (element && quarter === state.quarters[state.quarters.length - 1]) {
+                    element.classList.remove('processing');
+                    element.classList.add('complete');
+                    element.querySelector('.research-icon').textContent = '✅';
+                    element.querySelector('.research-status').textContent = 'Complete';
+                }
+            } catch (error) {
+                if (element) {
+                    element.classList.remove('processing');
+                    element.classList.add('error');
+                    element.querySelector('.research-icon').textContent = '❌';
+                    element.querySelector('.research-status').textContent = 'Error: ' + error.message;
+                }
+            }
+        }
+
+        function updateResearchProgress(completed, total) {
+            const percent = Math.round((completed / total) * 100);
+            document.getElementById('researchProgressBar').style.width = `${percent}%`;
+            document.getElementById('researchProgressText').textContent = `Processing ${completed} of ${total} requests...`;
+            document.getElementById('researchTimeEstimate').textContent = `~${Math.ceil((total - completed) * 3)}s remaining`;
+        }
+
+        // ========== Response Modal ==========
+        function showResponseModal(company, quarter, year, data) {
+            const modal = document.getElementById('responseModal');
+            const body = document.getElementById('responseModalBody');
+
+            const resultData = data.data || {};
+            const rawResponse = resultData.raw_response || 'No response available';
+
+            body.innerHTML = `
+                <div style="margin-bottom: var(--space-4);">
+                    <span class="badge ${data.success ? 'badge-success' : 'badge-error'}">
+                        ${data.success ? '✅ SUCCESS' : '❌ FAILED'}
+                    </span>
+                    <strong style="margin-left: var(--space-2);">${company} - ${quarter} ${year}</strong>
+                </div>
+                <h4 style="margin-bottom: var(--space-2);">📝 Raw AI Response:</h4>
+                <div class="response-raw">${rawResponse}</div>
+            `;
+
+            modal.classList.add('active');
+
+            // Auto-close after 3 seconds
+            setTimeout(() => closeModal(), 3000);
+        }
+
+        function closeModal() {
+            document.getElementById('responseModal').classList.remove('active');
+        }
+
+        // Close on background click
+        document.getElementById('responseModal').addEventListener('click', (e) => {
+            if (e.target.id === 'responseModal') closeModal();
+        });
+
+        // ========== Preview Data ==========
+        // ========== Preview Data ==========
+        function loadPreviewData() {
+            // Display all companies
+            if (state.selectedCompanies.length > 0) {
+                displayCompanyData();
+            }
+
+            // Update summary
+            document.getElementById('summaryCompanies').textContent = state.selectedCompanies.length;
+            document.getElementById('summaryDataPoints').textContent = state.researchResults.length;
+            document.getElementById('summaryConfidence').textContent = '95%';
+        }
+
+        async function displayCompanyData() {
+            const previewContent = document.getElementById('previewContent');
+            const companies = state.selectedCompanies; // Show all selected/researched companies
+
+            if (companies.length === 0) {
+                previewContent.innerHTML = '<div class="empty-state">No companies selected or researched yet.</div>';
+                return;
+            }
+
+            // Get unique years and quarters globally for filter context
+            const years = [...new Set(state.researchResults.map(r => r.year))].sort().reverse();
+            const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+            // 1. Setup Filters (Top Level)
+            window.updatePreviewFilters = () => displayCompanyData();
+
+            const yearFilter = document.getElementById('previewYearFilter')?.value || 'all';
+            const quarterFilter = document.getElementById('previewQuarterFilter')?.value || 'all';
+
+            const yearOptions = years.map(y => `<option value="${y}" ${y.toString() === yearFilter ? 'selected' : ''}>${y}</option>`).join('');
+            const quarterOptions = quarters.map(q => `<option value="${q}" ${q === quarterFilter ? 'selected' : ''}>${q}</option>`).join('');
+
+            const filtersHtml = `
+                <div id="previewFilters" style="display: flex; gap: 1rem; margin-bottom: 2rem; padding: 1rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label>Year</label>
+                        <select id="previewYearFilter" onchange="window.updatePreviewFilters()">
+                            <option value="all">All Years</option>
+                            ${yearOptions}
+                        </select>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label>Quarter</label>
+                        <select id="previewQuarterFilter" onchange="window.updatePreviewFilters()">
+                            <option value="all">All Quarters</option>
+                            ${quarterOptions}
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            // 2. Build HTML for ALL companies
+            let allTablesHtml = '';
+
+            companies.forEach(company => {
+                allTablesHtml += renderCompanyTable(company, yearFilter, quarterFilter);
+            });
+
+            if (allTablesHtml === '') {
+                allTablesHtml = '<div class="empty-state">No data matches the current filters.</div>';
+            }
+
+            previewContent.innerHTML = filtersHtml + allTablesHtml;
+        }
+
+        function renderCompanyTable(company, yearFilter, quarterFilter) {
+            const results = state.researchResults.filter(r => r.company === company);
+            if (results.length === 0) return ''; // Skip if no data
+
+            // Filter valid quarters for THIS company
+            let displayQuarters = [];
+            results.forEach(r => {
+                if ((yearFilter === 'all' || r.year.toString() === yearFilter) &&
+                    (quarterFilter === 'all' || r.quarter === quarterFilter)) {
+
+                    const label = `${r.quarter} ${r.year}`;
+                    if (!displayQuarters.find(q => q.label === label)) {
+                        displayQuarters.push({ label: label, q: r.quarter, y: r.year, data: r });
+                    }
+                }
+            });
+
+            // Sort
+            displayQuarters.sort((a, b) => {
+                if (a.y !== b.y) return a.y - b.y;
+                return a.q.localeCompare(b.q);
+            });
+
+            if (displayQuarters.length === 0) return ''; // Don't show empty card if filtered out
+
+            const headers = displayQuarters.map(item => `<th>${item.label}</th>`).join('');
+
+            // Metrics Definitions
+            const metrics = [
+                { key: 'total_income', label: 'Revenue', isPercent: false },
+                { key: 'ebitda_margin', label: 'Op. EBITDA%', isPercent: true, derive: (d) => d.ebitda?.value && d.total_income?.value ? (d.ebitda.value / d.total_income.value * 100) : null },
+                { key: 'op_pbt', label: 'Op. PBT', isPercent: false, derive: (d) => d.ebit?.value && d.interest?.value ? (d.ebit.value - d.interest.value) : null },
+                { key: 'pbt', label: 'PBT', isPercent: false },
+                { key: 'ebit_margin', label: 'Op. EBIT%', isPercent: true, derive: (d) => d.ebit?.value && d.total_income?.value ? (d.ebit.value / d.total_income.value * 100) : null }
+            ];
+
+            const rows = metrics.map(metric => {
+                const cells = displayQuarters.map(dq => {
+                    const result = dq.data;
+                    const data = result ? (result.data.extracted_data || result.data || {}) : {};
+                    let value = null;
+                    let displayValue = '--';
+
+                    if (data[metric.key] && data[metric.key].value !== undefined) {
+                        value = data[metric.key].value;
+                    } else if (metric.derive) {
+                        value = metric.derive(data);
+                    }
+
+                    if (value !== null) {
+                        displayValue = metric.isPercent ? `${value.toFixed(2)}%` : `₹ ${value.toLocaleString('en-IN')}`;
+                    }
+                    return `<td>${displayValue}</td>`;
+                }).join('');
+                return `<tr><td>${metric.label}</td>${cells}<td><span class="confidence-badge confidence-high">High</span></td></tr>`; // Mock status
+            }).join('');
+
+            // Raw Response handling (just get first for now)
+            const firstRaw = displayQuarters[0].data;
+            const rawResponse = "Context Confidence: " + (firstRaw.context_confidence || 0) + "\n\n" +
+                (firstRaw.data.extracted_data ? JSON.stringify(firstRaw.data.extracted_data, null, 2) : 'No raw response available');
+
+            // Check if fallback data is being used
+            const isFallback = firstRaw.data.is_fallback || false;
+            const fallbackMessage = firstRaw.data.fallback_message || '';
+            const dataSource = firstRaw.data.source || 'Unknown';
+
+            return `
+                <div class="company-card" style="margin-bottom: 2rem;">
+                    ${isFallback ? `
+                    <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 0.75rem 1rem; margin-bottom: 1rem; border-radius: 8px; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.2rem;">⚠️</span>
+                        <div>
+                            <strong>Fallback Data Source</strong>
+                            <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: #856404;">
+                                ${fallbackMessage} - Data sourced from ${dataSource}
+                            </p>
+                        </div>
+                    </div>
+                    ` : ''}
+                    <div class="company-header">
+                        <div class="company-info">
+                            <h3>${company}</h3>
+                            <p>${company} Financial Data ${isFallback ? '(Fallback Source: ' + dataSource + ')' : ''}</p>
+                        </div>
+                        <span class="status-badge status-success">Analysis Complete</span>
+                    </div>
+                
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    ${headers}
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="raw-response-section" style="margin-top: 1rem;">
+                         <button class="btn btn-outline btn-sm" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                            Show Raw AI Response
+                         </button>
+                         <div class="raw-content hidden" style="margin-top: 1rem;">
+                            <pre style="background: #1e1e1e; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; color: #d4d4d4;">${rawResponse}</pre>
+                         </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ========== Download ==========
+        async function downloadExcel() {
+            addBotMessage(`📥 Generating your Excel file...`);
+
+            try {
+                const response = await fetch('/api/excel/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        template_path: state.uploadedFile ? state.uploadedFile.filepath : null
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const downloadUrl = `/api/excel/download/${encodeURIComponent(data.filepath)}`;
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = data.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    addBotMessage(`✅ Download started! Check your downloads folder.`);
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                addBotMessage(`❌ Download failed: ${error.message}`);
+            }
+        }
+
+        function startNewResearch() {
+            // Reset state
+            state.currentStep = 1;
+            state.uploadedFile = null;
+            state.companies = [];
+            state.selectedCompanies = [];
+            state.researchResults = [];
+
+            // Reset UI
+            document.getElementById('uploadProgress').classList.add('hidden');
+            document.getElementById('companyGrid').innerHTML = '';
+            document.getElementById('researchGrid').innerHTML = '';
+
+            goToStep(1);
+            addBotMessage(`🔄 Ready for a new research session! Upload your Excel file.`);
+        }
+
+        // ========== Chat ==========
+        function addBotMessage(text) {
+            const messages = document.getElementById('chatMessages');
+            const msg = document.createElement('div');
+            msg.className = 'chat-message bot';
+            msg.innerHTML = text;
+            messages.appendChild(msg);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function addUserMessage(text) {
+            const messages = document.getElementById('chatMessages');
+            const msg = document.createElement('div');
+            msg.className = 'chat-message user';
+            msg.textContent = text;
+            messages.appendChild(msg);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            addUserMessage(text);
+            input.value = '';
+
+            // Simple response logic (can be enhanced with AI)
+            setTimeout(() => {
+                if (state.researchResults.length === 0) {
+                    addBotMessage(`I don't have any research data yet. Please upload an Excel file and complete the research first!`);
+                } else if (text.toLowerCase().includes('download')) {
+                    addBotMessage(`Click the "Download Excel" button in Step 5 to get your filled Excel file!`);
+                } else if (text.toLowerCase().includes('company') || text.toLowerCase().includes('companies')) {
+                    addBotMessage(`I've researched ${state.selectedCompanies.length} companies: ${state.selectedCompanies.join(', ')}`);
+                } else {
+                    addBotMessage(`I found ${state.researchResults.length} data points across ${state.selectedCompanies.length} companies. Check the Preview tab for details!`);
+                }
+            }, 500);
+        }
+
+        // ========== Load Existing Results ==========
+        async function loadExistingResults() {
+            try {
+                const response = await fetch('/api/results');
+                const data = await response.json();
+
+                if (data.success && data.results && data.results.length > 0) {
+                    console.log(`Loaded ${data.results.length} existing results`);
+                }
+            } catch (error) {
+                console.error('Error loading existing results:', error);
+            }
+        }
+    </script>
+</body>
+
+</html>

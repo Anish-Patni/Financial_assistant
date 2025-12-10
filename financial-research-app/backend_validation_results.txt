@@ -1,0 +1,107 @@
+======================================================================
+ BACKEND VALIDATION - Direct Component Testing
+======================================================================
+ Date: 2025-12-09 15:38:53
+======================================================================
+
+======================================================================
+ TEST 1: Configuration Validation
+======================================================================
+
+✓ API Key: SET
+✓ Model: sonar
+✓ Finance Domain: True
+✓ Rate Limit: 20 RPM
+✓ Cache Dir: C:\Users\Abcom\OneDrive - NETSCIENCE TECHNOLOGIES PRIVATE LIMITED\Desktop\Testing new\financial-research-app\data\cache
+✓ Results Dir: C:\Users\Abcom\OneDrive - NETSCIENCE TECHNOLOGIES PRIVATE LIMITED\Desktop\Testing new\financial-research-app\data\research_results
+
+======================================================================
+ TEST 2: Cache Manager
+======================================================================
+
+✓ Cache initialized successfully
+✓ Cached items: 0
+✗ Cache Manager Test Failed: 'CacheManager' object has no attribute 'delete'
+
+======================================================================
+ TEST 3: Research Storage
+======================================================================
+
+✓ Storage initialized successfully
+✓ Total research results: 31
+✓ Companies researched: 14
+✓ Quarters covered: []
+✓ Years covered: []
+
+Sample Results (first 5):
+  1. Birlasoft | Q1 2025
+  2. Birlasoft | Q4 2025
+  3. Coforge | Q1 2025
+  4. Coforge | Q4 2025
+  5. Companies | Q1 2025
+  ... and 26 more
+
+======================================================================
+ TEST 4: Financial Data Extractor
+======================================================================
+
+✗ Data Extractor Test Failed: 'FinancialDataExtractor' object has no attribute 'extract_from_text'
+Traceback (most recent call last):
+  File "C:\Users\Abcom\OneDrive - NETSCIENCE TECHNOLOGIES PRIVATE LIMITED\Desktop\Testing new\financial-research-app\test_backend_simple.py", line 161, in main
+    extracted = extractor.extract_from_text(sample_text)
+AttributeError: 'FinancialDataExtractor' object has no attribute 'extract_from_text'
+
+
+======================================================================
+ TEST 5: Perplexity Client (Init Only)
+======================================================================
+
+✓ Perplexity client initialized successfully
+✓ Using model: sonar
+✓ Finance domain: True
+
+⚠ Skipping actual API call to avoid rate limits
+
+======================================================================
+ TEST 6: Research Orchestrator
+======================================================================
+
+✓ Research Orchestrator initialized successfully
+✓ Default companies available: 13
+
+Sample Companies (first 10):
+  1. TCS
+  2. Persistent Systems
+  3. Tech Mahindra
+  4. Cyient
+  5. Infosys
+  6. LTIMindtree
+  7. Wipro
+  8. LT Technology Services
+  9. Coforge
+  10. MPHASIS
+  ... and 3 more
+
+======================================================================
+ TEST SUMMARY
+======================================================================
+
+✓ PASS | CONFIG
+✗ FAIL | CACHE
+✓ PASS | STORAGE
+✗ FAIL | EXTRACTOR
+✓ PASS | CLIENT
+✓ PASS | ORCHESTRATOR
+
+======================================================================
+ Total: 4/6 tests passed
+======================================================================
+
+✗ SOME TESTS FAILED - Backend has issues!
+
+CONCLUSION:
+  The backend has problems that need to be fixed first.
+  Review the failed tests above for details.
+
+Full results saved to: C:\Users\Abcom\OneDrive - NETSCIENCE TECHNOLOGIES PRIVATE LIMITED\Desktop\Testing new\financial-research-app\backend_validation_results.txt
+

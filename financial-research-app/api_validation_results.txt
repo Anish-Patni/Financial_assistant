@@ -1,0 +1,130 @@
+======================================================================
+ FLASK API VALIDATION - HTTP Endpoint Testing
+======================================================================
+ Date: 2025-12-09 15:40:15
+ Base URL: http://localhost:5000
+======================================================================
+
+======================================================================
+ TEST 1: Server Health Check
+======================================================================
+
+✓ Server is running and responding
+✓ Status Code: 200
+
+======================================================================
+ TEST 2: API /api/companies
+======================================================================
+
+✓ API endpoint responding
+✓ Status Code: 200
+✓ Companies available: 13
+
+Sample Companies:
+  1. TCS
+  2. Persistent Systems
+  3. Tech Mahindra
+  4. Cyient
+  5. Infosys
+  ... and 8 more
+
+======================================================================
+ TEST 3: API /api/config
+======================================================================
+
+✓ API endpoint responding
+✓ Status Code: 200
+
+Configuration:
+  - Model: sonar
+  - Finance Domain: True
+  - Rate Limit: 20 RPM
+  - Cache Enabled: True
+  - API Key Set: True
+
+======================================================================
+ TEST 4: API /api/results (CRITICAL TEST)
+======================================================================
+
+✓ API endpoint responding
+✓ Status Code: 200
+✓ Success: True
+
+Results Summary:
+  - Total Results: 31
+  - Companies: 14
+  - Quarters: []
+  - Years: []
+
+✓ BACKEND IS RETURNING DATA!
+
+Sample Results (first 5):
+  1. Birlasoft | Q1 2025 | Status: success | Data Points: 0
+  2. Birlasoft | Q4 2025 | Status: success | Data Points: 0
+  3. Coforge | Q1 2025 | Status: success | Data Points: 0
+  4. Coforge | Q4 2025 | Status: success | Data Points: 0
+  5. Companies | Q1 2025 | Status: success | Data Points: 0
+  ... and 26 more results
+
+✓ Full JSON Response Sample:
+{
+  "company": "Birlasoft",
+  "context_confidence": 1.0,
+  "extracted_data": {},
+  "extraction_summary": "Company: Birlasoft\nPeriod: Q1 2025\nContext Confidence: 1.00\n\nExtracted Indicators:\n  No data extracted",
+  "quarter": "Q1",
+  "raw_response": "Here is the quarterly financial data for Birlasoft Ltd for Q1 FY 2025 (ending June 2025), based on the latest available official filings and verified financial databases such as MoneyControl and Screener.in:\n\n| Metric                    | Amoun...
+
+======================================================================
+ TEST 5: API /api/cache/stats
+======================================================================
+
+✓ API endpoint responding
+✓ Status Code: 200
+✓ Cache Stats: {'hit_rate_percent': 0, 'hits': 0, 'misses': 0, 'total_requests': 0}
+
+======================================================================
+ TEST 6: API /api/research/status
+======================================================================
+
+✓ API endpoint responding
+✓ Status Code: 200
+✓ Research Status: {'message': '', 'progress': 0, 'results': [], 'running': False}
+
+======================================================================
+ TEST SUMMARY
+======================================================================
+
+✓ PASS | SERVER
+✓ PASS | COMPANIES
+✓ PASS | CONFIG
+✓ PASS | RESULTS
+✓ PASS | CACHE
+✓ PASS | STATUS
+
+======================================================================
+ Total: 6/6 tests passed
+======================================================================
+
+✓ ALL API TESTS PASSED!
+
+CONCLUSION:
+  The Flask API is working correctly and returning data.
+  Since you're not seeing output in the frontend, the issue is
+  definitely in the FRONTEND JavaScript code:
+
+  Possible issues:
+    1. Frontend not making API calls at all
+    2. Frontend making calls to wrong URL
+    3. Frontend not handling the response correctly
+    4. Frontend not displaying the data (DOM manipulation issue)
+    5. JavaScript errors preventing execution (check browser console)
+
+  Next steps:
+    - Open browser Developer Tools (F12)
+    - Check Console for JavaScript errors
+    - Check Network tab to see if API calls are being made
+    - Verify responses in Network tab match expected data
+
+Full results saved to: C:\Users\Abcom\OneDrive - NETSCIENCE TECHNOLOGIES PRIVATE LIMITED\Desktop\Testing new\financial-research-app\api_validation_results.txt
+

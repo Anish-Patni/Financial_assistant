@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Research Debug Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .header .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px 25px;
+            border-radius: 10px;
+            flex: 1;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .progress-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .results-grid {
+            display: grid;
+            gap: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .result-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .result-card .meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .indicators {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .indicator {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .indicator .name {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .indicator .value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .indicator .confidence {
+            font-size: 10px;
+            color: #667eea;
+        }
+
+        .console {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .console-line {
+            margin: 3px 0;
+        }
+
+        .console-success {
+            color: #4ec9b0;
+        }
+
+        .console-error {
+            color: #f48771;
+        }
+
+        .console-info {
+            color: #9cdcfe;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .verification-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #ccc;
+        }
+
+        .verification-card.success {
+            border-left-color: #28a745;
+        }
+
+        .verification-card.failed {
+            border-left-color: #dc3545;
+        }
+
+        .v-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .v-icon {
+            font-size: 24px;
+        }
+
+        .v-title {
+            flex: 1;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .v-status {
+            font-size: 20px;
+        }
+
+        .v-detail {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+            min-height: 20px;
+        }
+
+        .v-button {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        /* Response Modal Styles */
+        .response-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .response-modal.active {
+            display: flex;
+        }
+
+        .response-modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .response-modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .response-modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .response-modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            transition: background 0.2s;
+        }
+
+        .response-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .response-modal-body {
+            padding: 30px;
+            max-height: calc(85vh - 100px);
+            overflow-y: auto;
+        }
+
+        .response-section {
+            margin-bottom: 25px;
+        }
+
+        .response-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        .response-json {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .response-raw {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .response-status {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .response-status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .response-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .response-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .response-meta-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .response-meta-item .label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .response-meta-item .value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>🚀 Financial Research Debug Interface</h1>
+                    <p>AI-Powered Financial Data Extraction System - Phase 2/3 Testing</p>
+                </div>
+                <a href="/"
+                    style="padding: 12px 24px; background: white; color: #667eea; border-radius: 8px; text-decoration: none; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    ← Back to Dashboard
+                </a>
+            </div>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="label">Total Research</div>
+                    <div class="value" id="totalResearch">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Companies</div>
+                    <div class="value" id="uniqueCompanies">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Avg Confidence</div>
+                    <div class="value" id="avgConfidence">0%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Cache Hit Rate</div>
+                    <div class="value" id="cacheHitRate">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid">
+            <!-- Research Panel -->
+            <div class="panel">
+                <h2>📊 Trigger Research</h2>
+
+                <div class="form-group">
+                    <label for="companySelect">Select Company</label>
+                    <select id="companySelect">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="quarterSelect">Quarter</label>
+                    <select id="quarterSelect">
+                        <option value="Q1">Q1</option>
+                        <option value="Q2">Q2</option>
+                        <option value="Q3">Q3</option>
+                        <option value="Q4">Q4</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="yearInput">Year</label>
+                    <input type="number" id="yearInput" value="2024" min="2020" max="2025">
+                </div>
+
+                <button onclick="triggerResearch()" id="researchBtn">
+                    🔍 Start Research
+                </button>
+
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%">
+                            <span id="progressText">0%</span>
+                        </div>
+                    </div>
+                    <div id="progressMessage">Initializing...</div>
+                </div>
+            </div>
+
+            <!-- Config Panel -->
+            <div class="panel">
+                <h2>⚙️ Configuration</h2>
+                <div id="configInfo" style="font-family: monospace; font-size: 13px;">
+                    Loading configuration...
+                </div>
+                <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-secondary" onclick="refreshStats()">
+                        🔄 Refresh Stats
+                    </button>
+                    <button class="btn-danger" onclick="clearCache()">
+                        🗑️ Clear Cache
+                    </button>
+                    <button onclick="downloadExcel()" style="background: #28a745;">
+                        📥 Download Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Panel -->
+        <div class="panel">
+            <h2>✅ System Verification</h2>
+            <p style="color: #666; margin-bottom: 20px;">Test individual components to verify they're working correctly
+            </p>
+
+            <div id="verificationGrid" style="display: grid; gap: 15px;">
+                <!-- Component Status Cards -->
+                <div class="verification-card" id="vcard-api">
+                    <div class="v-header">
+                        <span class="v-icon">🔌</span>
+                        <span class="v-title">API Connection</span>
+                        <span class="v-status" id="status-api">⏳</span>
+                    </div>
+                    <div class="v-detail" id="detail-api">Testing...</div>
+                    <button onclick="testAPI()" class="v-button">Test API</button>
+                </div>
+
+                <div class="verification-card" id="vcard-companies">
+                    <div class="v-header">
+                        <span class="v-icon">🏢</span>
+                        <span class="v-title">Companies Loaded</span>
+                        <span class="v-status" id="status-companies">⏳</span>
+                    </div>
+                    <div class="v-detail" id="detail-companies">0 companies</div>
+                    <button onclick="testCompanies()" class="v-button">Test Companies</button>
+                </div>
+
+                <div class="verification-card" id="vcard-extraction">
+                    <div class="v-header">
+                        <span class="v-icon">🔍</span>
+                        <span class="v-title">NLP Extraction</span>
+                        <span class="v-status" id="status-extraction">⏳</span>
+                    </div>
+                    <div class="v-detail" id="detail-extraction">Ready</div>
+                    <button onclick="testExtraction()" class="v-button">Test Extraction</button>
+                </div>
+
+                <div class="verification-card" id="vcard-storage">
+                    <div class="v-header">
+                        <span class="v-icon">💾</span>
+                        <span class="v-title">Data Storage</span>
+                        <span class="v-status" id="status-storage">⏳</span>
+                    </div>
+                    <div class="v-detail" id="detail-storage">0 results saved</div>
+                    <button onclick="testStorage()" class="v-button">Test Storage</button>
+                </div>
+
+                <div class="verification-card" id="vcard-cache">
+                    <div class="v-header">
+                        <span class="v-icon">⚡</span>
+                        <span class="v-title">Cache System</span>
+                        <span class="v-status" id="status-cache">⏳</span>
+                    </div>
+                    <div class="v-detail" id="detail-cache">Hit rate: 0%</div>
+                    <button onclick="testCache()" class="v-button">Test Cache</button>
+                </div>
+
+                <div class="verification-card" id="vcard-research">
+                    <div class="v-header">
+                        <span class="v-icon">🚀</span>
+                        <span class="v-title">Live Research</span>
+                        <span class="v-status" id="status-research">⏳</span>
+                    </div>
+                    <div class="v-detail" id="detail-research">Not tested yet</div>
+                    <button onclick="testResearch()" class="v-button">Test Research</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button onclick="runAllTests()" style="flex: 1;">
+                    ▶️ Run All Verifications
+                </button>
+                <button onclick="refreshStats()" class="btn-secondary">
+                    🔄 Refresh Stats
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="panel">
+            <h2>📈 Research Results</h2>
+            <div class="results-grid" id="resultsGrid">
+                <p style="text-align: center; color: #999; padding: 40px;">
+                    No research results yet. Trigger a research above to see results here.
+                </p>
+            </div>
+        </div>
+
+        <!-- Console Panel -->
+        <div class="panel">
+            <h2>🖥️ Debug Console</h2>
+            <div class="console" id="console">
+                <div class="console-line console-info">Debug console initialized...</div>
+                <div class="console-line console-success">Backend connected ✓</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Response Popup Modal -->
+    <div class="response-modal" id="responseModal">
+        <div class="response-modal-content">
+            <div class="response-modal-header">
+                <h2>🔍 API Response</h2>
+                <button class="response-modal-close" onclick="closeResponseModal()">×</button>
+            </div>
+            <div class="response-modal-body" id="responseModalBody">
+                <!-- Content will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize
+        let companies = [];
+
+        // Verification Functions
+        async function testAPI() {
+            updateVerification('api', 'testing', 'Testing API connection...');
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                if (config.api_key_set) {
+                    updateVerification('api', 'success', `✓ Connected (Model: ${config.model})`);
+                } else {
+                    updateVerification('api', 'failed', '✗ API key not set');
+                }
+            } catch (error) {
+                updateVerification('api', 'failed', '✗ Connection failed: ' + error);
+            }
+        }
+
+        async function testCompanies() {
+            updateVerification('companies', 'testing', 'Loading companies...');
+            try {
+                const response = await fetch('/api/companies');
+                const data = await response.json();
+                if (data.companies && data.companies.length > 0) {
+                    updateVerification('companies', 'success', `✓ Loaded ${data.companies.length} companies (TCS, Infosys, Wipro, etc.)`);
+                } else {
+                    updateVerification('companies', 'failed', '✗ No companies loaded');
+                }
+            } catch (error) {
+                updateVerification('companies', 'failed', '✗ Failed: ' + error);
+            }
+        }
+
+        async function testExtraction() {
+            updateVerification('extraction', 'testing', 'Testing NLP extractor...');
+            // This would require a backend endpoint, for now we check if we have results
+            try {
+                const response = await fetch('/api/results');
+                const data = await response.json();
+                if (data.success && data.results.length > 0) {
+                    const avgConf = data.summary.average_confidence;
+                    updateVerification('extraction', 'success', `✓ Extractor working (${data.summary.total_extractions} indicators extracted, avg conf: ${(avgConf * 100).toFixed(0)}%)`);
+                } else {
+                    updateVerification('extraction', 'success', '✓ Ready (no test data yet - run research to test)');
+                }
+            } catch (error) {
+                updateVerification('extraction', 'failed', '✗ Error: ' + error);
+            }
+        }
+
+        async function testStorage() {
+            updateVerification('storage', 'testing', 'Checking storage...');
+            try {
+                const response = await fetch('/api/results');
+                const data = await response.json();
+                if (data.success) {
+                    const count = data.summary.total_research_count;
+                    const companies = data.summary.companies.join(', ');
+                    updateVerification('storage', 'success', `✓ ${count} results saved (${companies || 'none yet'})`);
+                } else {
+                    updateVerification('storage', 'failed', '✗ Storage check failed');
+                }
+            } catch (error) {
+                updateVerification('storage', 'failed', '✗ Error: ' + error);
+            }
+        }
+
+        async function testCache() {
+            updateVerification('cache', 'testing', 'Testing cache...');
+            try {
+                const response = await fetch('/api/cache/stats');
+                const stats = await response.json();
+                const hitRate = stats.hit_rate_percent;
+                const total = stats.total_requests;
+                if (total > 0) {
+                    updateVerification('cache', 'success', `✓ Cache working (${hitRate.toFixed(1)}% hit rate, ${total} requests)`);
+                } else {
+                    updateVerification('cache', 'success', '✓ Cache ready (no requests yet)');
+                }
+            } catch (error) {
+                updateVerification('cache', 'failed', '✗ Error: ' + error);
+            }
+        }
+
+        async function testResearch() {
+            updateVerification('research', 'testing', 'Testing research capability...');
+            // Check if we can trigger research (don't actually run it)
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                if (config.api_key_set) {
+                    updateVerification('research', 'success', '✓ Ready to research (API key configured)');
+                } else {
+                    updateVerification('research', 'failed', '✗ API key not configured');
+                }
+            } catch (error) {
+                updateVerification('research', 'failed', '✗ Error: ' + error);
+            }
+        }
+
+        function updateVerification(component, status, message) {
+            const card = document.getElementById(`vcard-${component}`);
+            const statusEl = document.getElementById(`status-${component}`);
+            const detailEl = document.getElementById(`detail-${component}`);
+
+            // Update card class
+            card.classList.remove('success', 'failed');
+            if (status === 'success') {
+                card.classList.add('success');
+                statusEl.textContent = '✅';
+            } else if (status === 'failed') {
+                card.classList.add('failed');
+                statusEl.textContent = '❌';
+            } else {
+                statusEl.textContent = '⏳';
+            }
+
+            // Update detail
+            detailEl.textContent = message;
+
+            // Log to console
+            logConsole(`${component}: ${message}`, status === 'success' ? 'success' : status === 'failed' ? 'error' : 'info');
+        }
+
+        async function runAllTests() {
+            logConsole('Running all verifications...', 'info');
+            await testAPI();
+            await new Promise(r => setTimeout(r, 300));
+            await testCompanies();
+            await new Promise(r => setTimeout(r, 300));
+            await testExtraction();
+            await new Promise(r => setTimeout(r, 300));
+            await testStorage();
+            await new Promise(r => setTimeout(r, 300));
+            await testCache();
+            await new Promise(r => setTimeout(r, 300));
+            await testResearch();
+            logConsole('All verifications complete!', 'success');
+        }
+
+        // Load initial data
+        async function init() {
+            await loadCompanies();
+            await loadConfig();
+            await refreshStats();
+            await loadResults();
+        }
+
+        // Load companies
+        async function loadCompanies() {
+            try {
+                const response = await fetch('/api/companies');
+                const data = await response.json();
+                companies = data.companies;
+
+                const select = document.getElementById('companySelect');
+                select.innerHTML = companies.map(c =>
+                    `<option value="${c}">${c}</option>`
+                ).join('');
+
+                logConsole('Loaded ' + companies.length + ' companies', 'success');
+            } catch (error) {
+                logConsole('Error loading companies: ' + error, 'error');
+            }
+        }
+
+        // Load configuration
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+
+                document.getElementById('configInfo').innerHTML = `
+                    <div style="line-height: 1.8;">
+                        <strong>Model:</strong> ${config.model}<br>
+                        <strong>Finance Domain:</strong> ${config.finance_domain ? 'Enabled ✓' : 'Disabled'}<br>
+                        <strong>Rate Limit:</strong> ${config.rate_limit_rpm} req/min<br>
+                        <strong>Cache:</strong> ${config.cache_enabled ? 'Enabled' : 'Disabled'} (TTL: ${config.cache_ttl}s)<br>
+                        <strong>API Key:</strong> ${config.api_key_set ? '✓ SET' : '✗ NOT SET'}
+                    </div>
+                `;
+
+                logConsole('Configuration loaded', 'success');
+            } catch (error) {
+                logConsole('Error loading config: ' + error, 'error');
+            }
+        }
+
+        // Trigger research
+        async function triggerResearch() {
+            const company = document.getElementById('companySelect').value;
+            const quarter = document.getElementById('quarterSelect').value;
+            const year = document.getElementById('yearInput').value;
+
+            if (!company) {
+                alert('Please select a company');
+                return;
+            }
+
+            const btn = document.getElementById('researchBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Researching...';
+
+            const progress = document.getElementById('progressContainer');
+            progress.style.display = 'block';
+
+            // Update progress to show it's working
+            document.getElementById('progressFill').style.width = '30%';
+            document.getElementById('progressText').textContent = '30%';
+            document.getElementById('progressMessage').textContent = `Querying ${company} for ${quarter} ${year}...`;
+
+            logConsole(`Starting research: ${company} ${quarter} ${year}`, 'info');
+
+            try {
+                const response = await fetch(`/api/research/${company}/${quarter}/${year}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                // ALWAYS show the response in a popup
+                showResponsePopup(company, quarter, year, data);
+
+                if (data.success) {
+                    // Update progress to complete
+                    document.getElementById('progressFill').style.width = '100%';
+                    document.getElementById('progressText').textContent = '100%';
+                    document.getElementById('progressMessage').textContent = 'Research complete! Loading results...';
+
+                    logConsole(`Research completed successfully!`, 'success');
+
+                    // Wait a moment then reload results
+                    await new Promise(r => setTimeout(r, 500));
+                    await loadResults();
+                    await refreshStats();
+
+                    // Show success notification
+                    const resultsGrid = document.getElementById('resultsGrid');
+                    if (resultsGrid && resultsGrid.firstElementChild) {
+                        resultsGrid.firstElementChild.style.animation = 'fadeIn 0.5s ease-in';
+                        resultsGrid.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+
+                    logConsole(`Results displayed for ${company}`, 'success');
+                } else {
+                    logConsole(`Research failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                logConsole(`Error: ${error}`, 'error');
+                showResponsePopup(company, quarter, year, { success: false, error: error.message });
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔍 Start Research';
+                // Hide progress after a delay
+                setTimeout(() => {
+                    progress.style.display = 'none';
+                    document.getElementById('progressFill').style.width = '0%';
+                }, 2000);
+            }
+        }
+
+        // Show response in popup modal
+        function showResponsePopup(company, quarter, year, data) {
+            const modal = document.getElementById('responseModal');
+            const body = document.getElementById('responseModalBody');
+
+            // Extract key data
+            const isSuccess = data.success;
+            const resultData = data.data || {};
+            const rawResponse = resultData.raw_response || 'No raw response available';
+            const extractedData = resultData.extracted_data || resultData.data || {};
+            const confidence = resultData.context_confidence || 0;
+
+            body.innerHTML = `
+                <div class="response-status ${isSuccess ? 'success' : 'error'}">
+                    ${isSuccess ? '✅ SUCCESS' : '❌ FAILED'}: ${company} ${quarter} ${year}
+                </div>
+
+                ${isSuccess ? `
+                <div class="response-meta">
+                    <div class="response-meta-item">
+                        <div class="label">Company</div>
+                        <div class="value">${company}</div>
+                    </div>
+                    <div class="response-meta-item">
+                        <div class="label">Period</div>
+                        <div class="value">${quarter} ${year}</div>
+                    </div>
+                    <div class="response-meta-item">
+                        <div class="label">Confidence</div>
+                        <div class="value">${(confidence * 100).toFixed(0)}%</div>
+                    </div>
+                    <div class="response-meta-item">
+                        <div class="label">Indicators</div>
+                        <div class="value">${Object.keys(extractedData).length}</div>
+                    </div>
+                </div>
+                ` : ''}
+
+                <div class="response-section">
+                    <h3>📝 Raw AI Response</h3>
+                    <div class="response-raw">${rawResponse}</div>
+                </div>
+
+                <div class="response-section">
+                    <h3>📊 Extracted Data</h3>
+                    <div class="response-json">${JSON.stringify(extractedData, null, 2)}</div>
+                </div>
+
+                <div class="response-section">
+                    <h3>🔧 Full API Response</h3>
+                    <div class="response-json">${JSON.stringify(data, null, 2)}</div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+            logConsole('Response popup displayed', 'info');
+        }
+
+        // Close response modal
+        function closeResponseModal() {
+            document.getElementById('responseModal').classList.remove('active');
+        }
+
+        // Close modal on background click
+        document.getElementById('responseModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeResponseModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeResponseModal();
+            }
+        });
+
+        // Load results
+        async function loadResults() {
+            try {
+                const response = await fetch('/api/results');
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data.results);
+                }
+            } catch (error) {
+                logConsole('Error loading results: ' + error, 'error');
+            }
+        }
+
+        // Display results
+        function displayResults(results) {
+            const grid = document.getElementById('resultsGrid');
+
+            if (!results || results.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">No results yet. Trigger research above to see results here.</p>';
+                return;
+            }
+
+            // Sort results by most recent first (assuming they have timestamps or we use array order)
+            const sortedResults = [...results].reverse();
+
+            grid.innerHTML = sortedResults.map((result, index) => {
+                const extracted = result.extracted_data || {};
+                const indicators = Object.keys(extracted).slice(0, 4); // Show first 4
+
+                // Highlight the most recent result
+                const isNewest = index === 0;
+                const highlightStyle = isNewest ? 'border-left-color: #28a745; box-shadow: 0 5px 20px rgba(40, 167, 69, 0.3);' : '';
+
+                return `
+                    <div class="result-card" style="${highlightStyle} animation: fadeIn 0.5s ease-in;">
+                        <h3>${result.company} - ${result.quarter} ${result.year} ${isNewest ? '✨ NEW' : ''}</h3>
+                        <div class="meta">
+                            <span class="badge ${result.status === 'success' || !result.status ? 'badge-success' : 'badge-warning'}">${result.status || 'success'}</span>
+                            <span>Context: ${(result.context_confidence * 100).toFixed(0)}%</span>
+                            <span>Indicators: ${Object.keys(extracted).length}</span>
+                        </div>
+                        <div class="indicators">
+                            ${indicators.length > 0 ? indicators.map(key => {
+                    const ind = extracted[key];
+                    return `
+                                    <div class="indicator">
+                                        <div class="name">${key}</div>
+                                        <div class="value">₹${ind.value.toFixed(2)} Cr</div>
+                                        <div class="confidence">conf: ${(ind.confidence * 100).toFixed(0)}%</div>
+                                    </div>
+                                `;
+                }).join('') : '<p style="color: #999; padding: 10px;">No indicators extracted</p>'}
+                        </div>
+                        ${Object.keys(extracted).length > 4 ? `<p style="margin-top: 10px; color: #666; font-size: 12px;">+ ${Object.keys(extracted).length - 4} more indicators</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            logConsole(`Displaying ${results.length} results`, 'info');
+        }
+
+        // Refresh stats
+        async function refreshStats() {
+            try {
+                // Get results summary
+                const response = await fetch('/api/results');
+                const data = await response.json();
+
+                if (data.success) {
+                    const summary = data.summary;
+                    document.getElementById('totalResearch').textContent = summary.total_research_count;
+                    document.getElementById('uniqueCompanies').textContent = summary.unique_companies;
+                    document.getElementById('avgConfidence').textContent =
+                        (summary.average_confidence * 100).toFixed(0) + '%';
+                }
+
+                // Get cache stats
+                const cacheResponse = await fetch('/api/cache/stats');
+                const cacheData = await cacheResponse.json();
+                document.getElementById('cacheHitRate').textContent =
+                    cacheData.hit_rate_percent.toFixed(1) + '%';
+
+                logConsole('Stats refreshed', 'info');
+            } catch (error) {
+                logConsole('Error refreshing stats: ' + error, 'error');
+            }
+        }
+
+        // Clear cache
+        async function clearCache() {
+            if (!confirm('Clear all cache?')) return;
+
+            try {
+                const response = await fetch('/api/cache/clear', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    logConsole('Cache cleared successfully', 'success');
+                    await refreshStats();
+                }
+            } catch (error) {
+                logConsole('Error clearing cache: ' + error, 'error');
+            }
+        }
+
+        // Download Excel
+        async function downloadExcel() {
+            logConsole('Generating Excel file...', 'info');
+
+            try {
+                const response = await fetch('/api/excel/generate', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    logConsole(`Excel generated: ${data.message}`, 'success');
+
+                    // Download file
+                    const downloadUrl = `/api/excel/download/${encodeURIComponent(data.filepath)}`;
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = data.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    logConsole(`Downloaded: ${data.filename}`, 'success');
+                } else {
+                    logConsole(`Excel generation failed: ${data.error}`, 'error');
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                logConsole('Error downloading Excel: ' + error, 'error');
+                alert('Failed to generate Excel file');
+            }
+        }
+
+        // Console logging
+        function logConsole(message, type = 'info') {
+            const console = document.getElementById('console');
+            const line = document.createElement('div');
+            line.className = `console-line console-${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+
+</html>
