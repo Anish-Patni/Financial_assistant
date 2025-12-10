@@ -45,6 +45,9 @@ class ExcelGenerator:
         if 'Sheet' in self.workbook.sheetnames:
             del self.workbook['Sheet']
         
+        # Create Consolidated Dashboard (First Sheet)
+        self._create_consolidated_dashboard(research_results)
+        
         self._create_summary_sheet(research_results)
         
         # Group by company to avoid dupes if filling generic sheets
@@ -56,7 +59,157 @@ class ExcelGenerator:
         logger.info(f"Created workbook with {len(self.workbook.sheetnames)} sheets")
         return self.workbook
 
-    def _fill_workbook_from_template(self, results: List[Dict]):
+    def _create_consolidated_dashboard(self, results: List[Dict]):
+        """Create a consolidated dashboard sheet with all companies"""
+        ws = self.workbook.create_sheet("Consolidated Dashboard", 0)
+        
+        # Title
+        ws['A1'] = "Consolidated Financial Dashboard"
+        ws['A1'].font = Font(size=18, bold=True, color="FFFFFF")
+        ws['A1'].fill = PatternFill(start_color="2c3e50", end_color="2c3e50", fill_type="solid")
+        ws.merge_cells('A1:L1')
+        ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+        ws.row_dimensions[1].height = 35
+        
+        # Headers
+        headers = [
+            'Company', 'Quarter', 'Year', 
+            'Revenue', 'EBITDA', 'EBITDA %', 
+            'EBIT', 'EBIT %', 'PBT', 'PAT', 
+            'EPS', 'Status'
+        ]
+        
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=3, column=col, value=header)
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill(start_color="34495e", end_color="34495e", fill_type="solid")
+            cell.alignment = Alignment(horizontal='center')
+            
+            # Set column width
+            width = 15
+            if header == 'Company': width = 25
+            elif 'Revenue' in header or 'EBITDA' in header: width = 18
+            ws.column_dimensions[get_column_letter(col)].width = width
+
+        # Sort results by Company, then Year, then Quarter
+        sorted_results = sorted(results, key=lambda x: (x.get('company', ''), x.get('year', 0), x.get('quarter', '')))
+        
+        # Data Rows
+        row = 4
+        for res in sorted_results:
+            data = res.get('extracted_data', {})
+            
+            # Helper to get value safely
+            def get_val(key):
+                if key in data:
+                    return data[key].get('value')
+                return None
+
+            # 1. Company
+            ws.cell(row=row, column=1, value=res.get('company', 'N/A'))
+            
+            # 2. Quarter
+            ws.cell(row=row, column=2, value=res.get('quarter', 'N/A'))
+            ws.cell(row=row, column=2).alignment = Alignment(horizontal='center')
+            
+            # 3. Year
+            ws.cell(row=row, column=3, value=res.get('year', 'N/A'))
+            ws.cell(row=row, column=3).alignment = Alignment(horizontal='center')
+            
+            # 4. Revenue
+            rev = get_val('total_income')
+            if rev:
+                c = ws.cell(row=row, column=4, value=rev)
+                c.number_format = '#,##0.00'
+            else:
+                ws.cell(row=row, column=4, value='--').alignment = Alignment(horizontal='center')
+
+            # 5. EBITDA
+            ebitda = get_val('ebitda')
+            if ebitda:
+                c = ws.cell(row=row, column=5, value=ebitda)
+                c.number_format = '#,##0.00'
+            else:
+                ws.cell(row=row, column=5, value='--').alignment = Alignment(horizontal='center')
+
+            # 6. EBITDA %
+            ebitda_margin = get_val('ebitda_margin')
+            if ebitda_margin:
+                c = ws.cell(row=row, column=6, value=ebitda_margin/100 if ebitda_margin > 1 else ebitda_margin) # Handle both 15.5 and 0.155
+                c.number_format = '0.00%'
+            elif ebitda and rev:
+                try:
+                    val = ebitda / rev
+                    c = ws.cell(row=row, column=6, value=val)
+                    c.number_format = '0.00%'
+                except:
+                    ws.cell(row=row, column=6, value='--')
+            else:
+                ws.cell(row=row, column=6, value='--').alignment = Alignment(horizontal='center')
+
+            # 7. EBIT
+            ebit = get_val('ebit')
+            if ebit:
+                c = ws.cell(row=row, column=7, value=ebit)
+                c.number_format = '#,##0.00'
+            else:
+                ws.cell(row=row, column=7, value='--').alignment = Alignment(horizontal='center')
+
+            # 8. EBIT %
+            ebit_margin = get_val('ebit_margin')
+            if ebit_margin:
+                c = ws.cell(row=row, column=8, value=ebit_margin/100 if ebit_margin > 1 else ebit_margin)
+                c.number_format = '0.00%'
+            elif ebit and rev:
+                try:
+                    val = ebit / rev
+                    c = ws.cell(row=row, column=8, value=val)
+                    c.number_format = '0.00%'
+                except:
+                    ws.cell(row=row, column=8, value='--')
+            else:
+                ws.cell(row=row, column=8, value='--').alignment = Alignment(horizontal='center')
+
+            # 9. PBT
+            pbt = get_val('pbt')
+            if pbt:
+                c = ws.cell(row=row, column=9, value=pbt)
+                c.number_format = '#,##0.00'
+            else:
+                ws.cell(row=row, column=9, value='--').alignment = Alignment(horizontal='center')
+
+            # 10. PAT
+            pat = get_val('pat') or get_val('net_profit')
+            if pat:
+                c = ws.cell(row=row, column=10, value=pat)
+                c.number_format = '#,##0.00'
+            else:
+                ws.cell(row=row, column=10, value='--').alignment = Alignment(horizontal='center')
+
+            # 11. EPS
+            eps = get_val('eps')
+            if eps:
+                c = ws.cell(row=row, column=11, value=eps)
+                c.number_format = '0.00'
+            else:
+                ws.cell(row=row, column=11, value='--').alignment = Alignment(horizontal='center')
+
+            # 12. Status
+            status = res.get('status', 'unknown')
+            c = ws.cell(row=row, column=12, value=status.upper())
+            c.alignment = Alignment(horizontal='center')
+            if status == 'success':
+                c.font = Font(color="006400", bold=True)
+            else:
+                c.font = Font(color="8B0000", bold=True)
+
+            row += 1
+        
+        # Add borders
+        thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+        for r in range(3, row):
+            for c in range(1, 13):
+                ws.cell(row=r, column=c).border = thin_border
         """Fill existing workbook using smart matching"""
         # Group results by company
         company_data = {}
@@ -81,14 +234,8 @@ class ExcelGenerator:
             if len(self.workbook.sheetnames) > 0:
                  self._smart_fill_sheet(self.workbook.worksheets[0], company, company_results)
 
-            # 2. Create detailed sheet from template
-            if template_sheet:
-                try:
-                    target_ws = self.workbook.copy_worksheet(template_sheet)
-                    target_ws.title = company[:30].replace('/', '-') # Safe title
-                    self._smart_fill_sheet(target_ws, company, company_results)
-                except Exception as e:
-                    logger.error(f"Error copying sheet for {company}: {e}")
+            # 2. Create detailed sheet from template - REMOVED to avoid duplicates
+            # The _create_simple_company_sheet below creates the correct [Company]_Data sheet
             
             # 3. Always create a simple data sheet as well for visibility
             self._create_simple_company_sheet(company, company_results)

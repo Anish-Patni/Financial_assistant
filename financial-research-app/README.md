@@ -8,6 +8,21 @@ An automated financial research platform that extracts, processes, and validates
 
 This application automates the extraction of quarterly financial data for Indian IT companies, performs sophisticated calculations, validates data quality, and generates comprehensive Excel reports - all powered by AI research capabilities.
 
+## 📋 Phase 2 Features (IMPLEMENTED)
+
+✅ **Enhanced Research Capabilities**
+- **Multi-Quarter Research**: Select multiple quarters and years for batch processing.
+- **Company Management**: Easily remove companies from the research list.
+- **Consolidated Dashboard**: Excel output now includes a summary dashboard sheet aggregating all results.
+
+✅ **Interactive AI Chat**
+- **"Ask About Your Data"**: Integrated chat interface powered by Perplexity.
+- **Context-Aware**: AI answers questions using the specific financial data extracted during research.
+
+✅ **UI/UX Improvements**
+- **Clean Interface**: Removed intrusive debug popups for a smoother experience.
+- **Dedicated Debug Page**: Advanced debugging tools moved to `/debug`.
+
 ## 📋 Phase 1 Features (IMPLEMENTED)
 
 ✅ **Project Infrastructure**

@@ -587,6 +587,10 @@ def download_excel(filepath):
         
         file_path = Path(unquote(filepath))
         
+        # Fix for missing leading slash in temp paths (common issue with URL encoding/decoding)
+        if not file_path.is_absolute() and str(file_path).startswith(('var/', 'tmp/', 'private/')):
+            file_path = Path('/') / file_path
+        
         if not file_path.exists():
             logger.error(f"File not found: {file_path}")
             return jsonify({
@@ -614,6 +618,67 @@ def download_excel(filepath):
         logger.error(f"Download failed: {e}")
         import traceback
         traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/chat', methods=['POST'])
+def chat_with_data():
+    """Chat with the AI about the researched data"""
+    try:
+        data = request.json
+        message = data.get('message')
+        context = data.get('context', [])
+        
+        if not message:
+            return jsonify({'success': False, 'error': 'Message is required'}), 400
+            
+        # Construct prompt with context
+        context_str = "Here is the financial data we have researched:\n\n"
+        
+        # Limit context to avoid token limits (summarize or pick top items if needed)
+        # For now, we'll format the first 50 items or so
+        for item in context[:50]:
+            company = item.get('company', 'Unknown')
+            period = f"{item.get('quarter', '')} {item.get('year', '')}"
+            
+            # Extract key metrics if available
+            extracted = item.get('data', {}).get('extracted_data', {})
+            metrics = []
+            for k, v in extracted.items():
+                if isinstance(v, dict) and 'value' in v:
+                    metrics.append(f"{k}: {v['value']}")
+            
+            if metrics:
+                context_str += f"--- {company} ({period}) ---\n"
+                context_str += ", ".join(metrics) + "\n\n"
+        
+        system_prompt = """You are a financial analyst assistant. 
+        Answer the user's question based on the provided financial data context. 
+        If the answer is not in the data, say so, but you can use your general knowledge to explain financial concepts.
+        Keep answers concise and professional."""
+        
+        full_prompt = f"{system_prompt}\n\n{context_str}\n\nUser Question: {message}"
+        
+        # Query Perplexity
+        # We use the existing client but might want a specific chat model or just use the default
+        response = client.query(full_prompt)
+        
+        if response and 'choices' in response:
+            answer = response['choices'][0]['message']['content']
+            return jsonify({
+                'success': True,
+                'response': answer
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to get response from AI'
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Chat failed: {e}")
         return jsonify({
             'success': False,
             'error': str(e)

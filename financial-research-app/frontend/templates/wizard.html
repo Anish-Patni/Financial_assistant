@@ -21,7 +21,7 @@
             flex-direction: column;
         }
 
-        
+
         /* Header */
         .wizard-header {
             background: var(--card-bg);
@@ -391,6 +391,60 @@
 
         .company-name {
             font-weight: 600;
+            flex: 1;
+        }
+
+        .company-remove-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            opacity: 0;
+        }
+
+        .company-item:hover .company-remove-btn {
+            opacity: 1;
+        }
+
+        .company-remove-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-500);
+        }
+
+        /* Selection Chips */
+        .selection-chip {
+            padding: var(--space-2) var(--space-4);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-full);
+            background: var(--bg-secondary);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all var(--transition-fast);
+            user-select: none;
+        }
+
+        .selection-chip:hover {
+            border-color: var(--primary-500);
+            background: var(--card-bg);
+        }
+
+        .selection-chip.selected {
+            background: var(--primary-500);
+            border-color: var(--primary-500);
+            color: white;
+        }
+
+        .chip-container {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
         }
 
         /* Research Progress */
@@ -778,29 +832,33 @@
 
                         <!-- Add Company UI (name only) -->
                         <div style="margin-top: 12px; display:flex; gap:8px; align-items:center;">
-                            <input id="newCompanyName" placeholder="Add company name (e.g. MyCo)" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-secondary);">
+                            <input id="newCompanyName" placeholder="Add company name (e.g. MyCo)"
+                                style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-secondary);">
                             <button class="btn btn-outline" onclick="addCompanyFromUI()">➕ Add</button>
                         </div>
 
                         <!-- Temporary included custom companies for this session -->
-                        <div id="customIncludedContainer" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+                        <div id="customIncludedContainer"
+                            style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>
                         <div class="grid grid-3 gap-4 mt-6">
                             <div>
                                 <label
                                     style="display: block; margin-bottom: var(--space-2); font-weight: 600;">Quarters</label>
-                                <select id="quartersSelect" multiple
-                                    style="width: 100%; padding: var(--space-3); border-radius: var(--radius-lg); border: 2px solid var(--border-color); background: var(--bg-secondary);">
-                                    <option value="Q1" selected>Q1</option>
-                                    <option value="Q2" selected>Q2</option>
-                                    <option value="Q3" selected>Q3</option>
-                                    <option value="Q4" selected>Q4</option>
-                                </select>
+                                <div class="chip-container" id="quarterChips">
+                                    <div class="selection-chip selected" onclick="toggleQuarter(this, 'Q1')">Q1</div>
+                                    <div class="selection-chip selected" onclick="toggleQuarter(this, 'Q2')">Q2</div>
+                                    <div class="selection-chip selected" onclick="toggleQuarter(this, 'Q3')">Q3</div>
+                                    <div class="selection-chip selected" onclick="toggleQuarter(this, 'Q4')">Q4</div>
+                                </div>
                             </div>
                             <div>
                                 <label
-                                    style="display: block; margin-bottom: var(--space-2); font-weight: 600;">Year</label>
-                                <input type="number" id="yearInput" value="2025" min="2020" max="2026"
-                                    style="width: 100%; padding: var(--space-3); border-radius: var(--radius-lg); border: 2px solid var(--border-color); background: var(--bg-secondary);">
+                                    style="display: block; margin-bottom: var(--space-2); font-weight: 600;">Years</label>
+                                <div class="chip-container" id="yearChips">
+                                    <div class="selection-chip" onclick="toggleYear(this, 2023)">2023</div>
+                                    <div class="selection-chip" onclick="toggleYear(this, 2024)">2024</div>
+                                    <div class="selection-chip selected" onclick="toggleYear(this, 2025)">2025</div>
+                                </div>
                             </div>
                             <div style="display: flex; align-items: flex-end;">
                                 <button class="btn btn-primary" style="width: 100%;" onclick="startResearch()">
@@ -927,18 +985,7 @@
         </footer>
     </div>
 
-    <!-- Response Modal -->
-    <div class="response-modal" id="responseModal">
-        <div class="response-modal-content">
-            <div class="response-modal-header">
-                <h3>🔍 API Response</h3>
-                <button class="response-modal-close" onclick="closeModal()">×</button>
-            </div>
-            <div class="response-modal-body" id="responseModalBody">
-                <!-- Content injected dynamically -->
-            </div>
-        </div>
-    </div>
+    <!-- Response Modal removed -->
 
     <!-- Hidden File Input -->
     <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
@@ -953,7 +1000,7 @@
             selectedCompanies: [],
             researchResults: [],
             quarters: ['Q1', 'Q2', 'Q3', 'Q4'],
-            year: 2025
+            years: [2025]
         };
 
         // ========== Initialization ==========
@@ -1113,6 +1160,7 @@
                     <div class="company-item ${isSelected ? 'selected' : ''}" data-company="${company}" onclick="toggleCompany(this)">
                         <div class="company-checkbox">✓</div>
                         <span class="company-name">${company}</span>
+                        <button class="company-remove-btn" onclick="removeCompany(event, '${company}')" title="Remove company">🗑️</button>
                     </div>
                 `;
             }).join('');
@@ -1143,6 +1191,24 @@
                 el.classList.remove('selected');
             });
             state.selectedCompanies = [];
+        }
+
+        function removeCompany(event, companyName) {
+            event.stopPropagation(); // Prevent toggling selection
+
+            if (confirm(`Are you sure you want to remove ${companyName}?`)) {
+                // Remove from main list
+                state.companies = state.companies.filter(c => c !== companyName);
+
+                // Remove from selected list
+                state.selectedCompanies = state.selectedCompanies.filter(c => c !== companyName);
+
+                // Re-render
+                populateCompanyGrid(state.companies);
+
+                // Show feedback
+                addBotMessage(`🗑️ Removed ${companyName} from the list.`);
+            }
         }
 
         // Add company from UI inputs
@@ -1226,6 +1292,29 @@
             });
         }
 
+        // ========== Chip Selection ==========
+        function toggleQuarter(element, quarter) {
+            element.classList.toggle('selected');
+            if (element.classList.contains('selected')) {
+                if (!state.quarters.includes(quarter)) state.quarters.push(quarter);
+            } else {
+                state.quarters = state.quarters.filter(q => q !== quarter);
+            }
+            // Sort to keep order
+            const order = ['Q1', 'Q2', 'Q3', 'Q4'];
+            state.quarters.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+        }
+
+        function toggleYear(element, year) {
+            element.classList.toggle('selected');
+            if (element.classList.contains('selected')) {
+                if (!state.years.includes(year)) state.years.push(year);
+            } else {
+                state.years = state.years.filter(y => y !== year);
+            }
+            state.years.sort((a, b) => a - b);
+        }
+
         // ========== Research ==========
         async function startResearch() {
             if (state.selectedCompanies.length === 0) {
@@ -1233,22 +1322,32 @@
                 return;
             }
 
-            state.quarters = Array.from(document.getElementById('quartersSelect').selectedOptions).map(o => o.value);
-            state.year = parseInt(document.getElementById('yearInput').value);
+            if (state.quarters.length === 0) {
+                addBotMessage(`⚠️ Please select at least one quarter.`);
+                return;
+            }
+
+            if (state.years.length === 0) {
+                addBotMessage(`⚠️ Please select at least one year.`);
+                return;
+            }
 
             goToStep(3);
             initResearchGrid();
 
             // Research each company
             let completed = 0;
-            const total = state.selectedCompanies.length * state.quarters.length;
+            const total = state.selectedCompanies.length * state.quarters.length * state.years.length;
 
             for (const company of state.selectedCompanies) {
-                for (const quarter of state.quarters) {
-                    await researchCompany(company, quarter, state.year);
-                    completed++;
-                    updateResearchProgress(completed, total);
+                for (const year of state.years) {
+                    for (const quarter of state.quarters) {
+                        await researchCompany(company, quarter, year);
+                        completed++;
+                        updateResearchProgress(completed, total);
+                    }
                 }
+                markCompanyComplete(company);
             }
 
             // Research complete - move to preview
@@ -1287,8 +1386,8 @@
                 });
                 const data = await response.json();
 
-                // Show popup with response
-                showResponseModal(company, quarter, year, data);
+                // Show popup removed for production
+                // showResponseModal(company, quarter, year, data);
 
                 // Store result
                 state.researchResults.push({
@@ -1299,12 +1398,6 @@
                     success: data.success
                 });
 
-                if (element && quarter === state.quarters[state.quarters.length - 1]) {
-                    element.classList.remove('processing');
-                    element.classList.add('complete');
-                    element.querySelector('.research-icon').textContent = '✅';
-                    element.querySelector('.research-status').textContent = 'Complete';
-                }
             } catch (error) {
                 if (element) {
                     element.classList.remove('processing');
@@ -1315,6 +1408,17 @@
             }
         }
 
+        function markCompanyComplete(company) {
+            const id = `research-${company.replace(/\s/g, '-')}`;
+            const element = document.getElementById(id);
+            if (element) {
+                element.classList.remove('processing');
+                element.classList.add('complete');
+                element.querySelector('.research-icon').textContent = '✅';
+                element.querySelector('.research-status').textContent = 'Complete';
+            }
+        }
+
         function updateResearchProgress(completed, total) {
             const percent = Math.round((completed / total) * 100);
             document.getElementById('researchProgressBar').style.width = `${percent}%`;
@@ -1322,39 +1426,25 @@
             document.getElementById('researchTimeEstimate').textContent = `~${Math.ceil((total - completed) * 3)}s remaining`;
         }
 
-        // ========== Response Modal ==========
+        // ========== Response Modal Removed ==========
+        /*
         function showResponseModal(company, quarter, year, data) {
-            const modal = document.getElementById('responseModal');
-            const body = document.getElementById('responseModalBody');
-
-            const resultData = data.data || {};
-            const rawResponse = resultData.raw_response || 'No response available';
-
-            body.innerHTML = `
-                <div style="margin-bottom: var(--space-4);">
-                    <span class="badge ${data.success ? 'badge-success' : 'badge-error'}">
-                        ${data.success ? '✅ SUCCESS' : '❌ FAILED'}
-                    </span>
-                    <strong style="margin-left: var(--space-2);">${company} - ${quarter} ${year}</strong>
-                </div>
-                <h4 style="margin-bottom: var(--space-2);">📝 Raw AI Response:</h4>
-                <div class="response-raw">${rawResponse}</div>
-            `;
-
-            modal.classList.add('active');
-
-            // Auto-close after 3 seconds
-            setTimeout(() => closeModal(), 3000);
+            // ... removed ...
         }
+        */
 
         function closeModal() {
-            document.getElementById('responseModal').classList.remove('active');
+            const modal = document.getElementById('responseModal');
+            if (modal) modal.classList.remove('active');
         }
 
         // Close on background click
-        document.getElementById('responseModal').addEventListener('click', (e) => {
-            if (e.target.id === 'responseModal') closeModal();
-        });
+        const responseModal = document.getElementById('responseModal');
+        if (responseModal) {
+            responseModal.addEventListener('click', (e) => {
+                if (e.target.id === 'responseModal') closeModal();
+            });
+        }
 
         // ========== Preview Data ==========
         // ========== Preview Data ==========
@@ -1529,12 +1619,7 @@
                     </div>
                     
                     <div class="raw-response-section" style="margin-top: 1rem;">
-                         <button class="btn btn-outline btn-sm" onclick="this.nextElementSibling.classList.toggle('hidden')">
-                            Show Raw AI Response
-                         </button>
-                         <div class="raw-content hidden" style="margin-top: 1rem;">
-                            <pre style="background: #1e1e1e; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; color: #d4d4d4;">${rawResponse}</pre>
-                         </div>
+                         <!-- Raw response button removed for production -->
                     </div>
                 </div>
             `;
@@ -1618,18 +1703,46 @@
             addUserMessage(text);
             input.value = '';
 
-            // Simple response logic (can be enhanced with AI)
-            setTimeout(() => {
-                if (state.researchResults.length === 0) {
-                    addBotMessage(`I don't have any research data yet. Please upload an Excel file and complete the research first!`);
-                } else if (text.toLowerCase().includes('download')) {
-                    addBotMessage(`Click the "Download Excel" button in Step 5 to get your filled Excel file!`);
-                } else if (text.toLowerCase().includes('company') || text.toLowerCase().includes('companies')) {
-                    addBotMessage(`I've researched ${state.selectedCompanies.length} companies: ${state.selectedCompanies.join(', ')}`);
+            // Show typing indicator
+            const typingId = 'typing-' + Date.now();
+            const messages = document.getElementById('chatMessages');
+            const typingMsg = document.createElement('div');
+            typingMsg.className = 'chat-message bot';
+            typingMsg.id = typingId;
+            typingMsg.innerHTML = '<span class="typing-dots">Thinking...</span>';
+            messages.appendChild(typingMsg);
+            messages.scrollTop = messages.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: text,
+                        context: state.researchResults || []
+                    })
+                });
+
+                const data = await response.json();
+
+                // Remove typing indicator
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
+
+                if (data.success) {
+                    addBotMessage(data.response);
                 } else {
-                    addBotMessage(`I found ${state.researchResults.length} data points across ${state.selectedCompanies.length} companies. Check the Preview tab for details!`);
+                    addBotMessage(`❌ Error: ${data.error || 'Failed to get response'}`);
                 }
-            }, 500);
+            } catch (error) {
+                // Remove typing indicator
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
+
+                addBotMessage(`❌ Network Error: ${error.message}`);
+            }
         }
 
         // ========== Load Existing Results ==========

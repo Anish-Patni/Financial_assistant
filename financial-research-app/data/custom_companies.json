@@ -4,5 +4,11 @@
     "code": "MYCO",
     "sector": "computers-software",
     "full_name": "MyCo Ltd."
+  },
+  "ITC": {
+    "slug": "itc",
+    "code": "ITC",
+    "sector": "computers-software",
+    "full_name": "ITC Ltd."
   }
 }
