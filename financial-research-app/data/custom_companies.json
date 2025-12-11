@@ -10,5 +10,11 @@
     "code": "ITC",
     "sector": "computers-software",
     "full_name": "ITC Ltd."
+  },
+  "Tata Elxsi": {
+    "slug": "tata-elxsi",
+    "code": "TE",
+    "sector": "computers-software",
+    "full_name": "Tata Elxsi Ltd."
   }
-}
+} 
